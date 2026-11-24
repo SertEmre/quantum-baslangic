@@ -351,7 +351,7 @@ sürüm (v3), Remix üzerinden gerçek Sepolia ağına deploy edildi:
 | Zincirden doğrulanan `etkinlikAdi()` | `"Quantum Takimi Final Etkinligi"` ✅ |
 | Zincirden doğrulanan `KAPASITE()` | `3` ✅ |
 | Zincirden doğrulanan `gorevli()` | `0x86FAb8EDB3Dc20C63d3194DF43F5BCb87781D6c8` ✅ (deploy eden adresle eşleşiyor) |
-| Etherscan Verify durumu | ⚠️ **Henüz yapılmadı** — bkz. aşağıdaki "Yapılacak" notu |
+| Etherscan Verify durumu | ✅ **"Exact Match"** — derleyici bytecode'u, submit edilen kaynak koddan bire bir üretiliyor. Compiler: `v0.8.34+commit.80d5c536`, Optimization: Disabled (200 runs) |
 | `web/src/config/contractConfig.js` güncellendi mi? | ✅ Evet, `DEFAULT_CONFIG.address` bu adresle güncellendi |
 
 ### Modül 2 (Etkinlik dApp) ile Uçtan Uca Canlı Test (İP 24 & İP 25)
@@ -374,11 +374,11 @@ giriş onayı) ise [`test/EtkinlikKayit.test.js`](../test/EtkinlikKayit.test.js)
 ile otomatik olarak doğrulanmıştır (11/11 test geçti) — aynı mantık hem
 manuel hem otomatik olarak iki kez teyit edilmiş oldu.
 
-> **Yapılacak (opsiyonel ama önerilir):** QuantumKayit'te yaptığın gibi
-> (İP 19), bu sözleşmeyi de Etherscan'de **Verify and Publish** ile
-> doğrula — derleyici sürümü ve optimizer ayarını Remix'teki ile birebir
-> aynı tut. Verify etmeden de sözleşme tamamen çalışır durumda; verify
-> sadece kaynak kodun şeffaf görünmesini sağlar.
+> ✅ **Tamamlandı:** [`0xa7Fc1B127dB1960fbFE32b8aD48ac623F9A9392E#code`](https://sepolia.etherscan.io/address/0xa7Fc1B127dB1960fbFE32b8aD48ac623F9A9392E#code)
+> adresinde kaynak kod "Exact Match" ile doğrulanmış durumda — Etherscan
+> artık `Read Contract` / `Write Contract` sekmelerini ve "Decode Input
+> Data" özelliğini bu sözleşme için de gösterebiliyor (İP 17'de açıklanan
+> şeffaflık avantajının aynısı).
 
 ### Benim yorumum
 v1'den v3'e geçerken en çok dikkatimi çeken şey, her sürümün bir öncekinin
