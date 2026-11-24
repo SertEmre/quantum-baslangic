@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quantum Team | Blokzincir Eğitim Araçları</title>
+  </head>
+  <body>
+    <div id="app">
+      <header class="app-header">
+        <div class="brand">
+          <span class="brand-mark">◆</span>
+          <div>
+            <h1>Quantum Team</h1>
+            <p class="brand-sub">Blokzincir Takımı · Eğitim Araçları</p>
+          </div>
+        </div>
+        <nav class="tabs" id="tabs">
+          <button class="tab-btn active" data-tab="wallet">
+            🔐 Modül 1 · Eğitim Cüzdanı
+          </button>
+          <button class="tab-btn" data-tab="dapp">
+            🎫 Modül 2 · Etkinlik dApp
+          </button>
+        </nav>
+      </header>
+
+      <main>
+        <section id="tab-wallet" class="tab-panel active"></section>
+        <section id="tab-dapp" class="tab-panel"></section>
+      </main>
+
+      <footer class="app-footer">
+        <p>
+          ⚠️ Bu iki modül kasıtlı olarak <strong>birbirinden izoledir</strong>:
+          Etkinlik dApp'i (Modül 2), Cüzdan Oluşturucu'dan (Modül 1) private
+          key / mnemonic / seed gibi hiçbir gizli veri okumaz veya almaz.
+          Modül 2, işlemleri yalnızca tarayıcıdaki MetaMask
+          (<code>window.ethereum</code>) üzerinden imzalatır.
+        </p>
+      </footer>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

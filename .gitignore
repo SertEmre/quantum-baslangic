@@ -1,0 +1,31 @@
+# --- Gizli / hassas dosyalar: ASLA commit edilmez ---
+.env
+.env.*
+!.env.example
+
+# --- Node / bağımlılıklar ---
+node_modules/
+web/node_modules/
+
+# --- Derleme / build çıktıları ---
+dist/
+web/dist/
+cache/
+artifacts/
+typechain-types/
+
+# --- Hardhat ---
+cache_hardhat/
+
+# --- Editör / işletim sistemi ---
+.vscode/
+.DS_Store
+Thumbs.db
+
+# --- Log dosyaları ---
+npm-debug.log*
+*.log
+
+# --- Kanıt ekran görüntüleri büyük olabilir; istenirse Git LFS kullanılabilir ---
+# docs/screenshots/ klasörü BİLEREK dışarıda bırakılmadı; kanıt dosyaları
+# küçük PNG/JPG olduğu için normal şekilde commit edilebilir.

@@ -1,0 +1,16 @@
+{
+  "name": "quantum-baslangic-contracts",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Quantum Team Blokzincir Takimi - Akilli sozlesmeler ve testler (Hardhat)",
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "node": "hardhat node"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "dotenv": "^16.4.5",
+    "hardhat": "^2.22.5"
+  }
+}
