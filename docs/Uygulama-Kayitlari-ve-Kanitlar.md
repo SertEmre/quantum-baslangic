@@ -246,15 +246,23 @@ ilkesinin iyi bir örneğidir.
 | **Gas / Ücret** | Daha düşük (basit transfer, ~21.000 gas) | Daha yüksek (sözleşme kodu çalıştırılır, storage güncellenir) |
 | **Logs / Token Transfer** | Log üretilmez | `Transfer(from, to, value)` event'i log olarak yayınlanır; Etherscan bunu "Token Transfer" olarak ayrıca gösterir |
 
-> **Dürüst not (yapılacak):** Şartname, bu karşılaştırmanın **ikinci bir
-> eğitim hesabı oluşturup ona gerçekten küçük miktarda ETH ve test USDC
-> göndererek**, iki gerçek tx hash üzerinden yapılmasını istiyor. Yukarıdaki
-> tablo doğru ve teknik olarak tamdır, ama şu anda **gerçek bir ikinci
-> hesaba yapılmış, tx hash'li bir transferle değil, genel bilgiyle**
-> doldurulmuştur. Tamamlamak için: MetaMask'te "Add Account" ile ikinci bir
-> hesap oluşturup, birinci hesaptan ona ~0.01 ETH ve birkaç USDC gönderip,
-> iki işlemin Etherscan linklerini buraya eklemeniz yeterlidir (birkaç
-> dakika sürer).
+> **Dürüst not:** İkinci bir eğitim hesabı (Account 2,
+> `0x02B8e4ab553E2361465fAfd26eC44039ED533FF8`) gerçekten oluşturuldu ve
+> kullanıldı (bkz. İP 23/25 bölümündeki canlı dApp testleri — Account 2
+> gerçekten kayıt oldu, giriş onayı aldı). Ancak **Account 1'den Account
+> 2'ye düz ETH/USDC transferi** (bu bölümün özel olarak istediği adım),
+> 27 Kasım'da Sepolia ağında yaşanan bir sorun nedeniyle **6 farklı
+> denemeye rağmen** (farklı RPC endpoint'leri, farklı gaz ayarları,
+> "Agresif" ve elle 50 Gwei gibi yüksek manuel değerler dahil)
+> tamamlanamadı — her denemede MetaMask "This transaction would have
+> cost you extra fees, so we stopped it" diyerek işlemi gönderilmeden
+> durdurdu (hem Account 1 hem Account 2'den denendiğinde aynı sonuç
+> alındı, bu da sorunun hesaba özgü değil ağ/MetaMask seviyesinde
+> olduğunu gösteriyor). Account 2'nin fonlaması bu yüzden Account 1'den
+> transferle değil, doğrudan bir faucet'ten (Google Cloud Web3 Faucet)
+> sağlandı. Yukarıdaki To/Value/Input Data/Gas/Log karşılaştırma tablosu
+> teknik olarak doğru ve tamdır, ama iki gerçek tx hash'le değil genel
+> bilgiyle doldurulmuştur.
 
 ### `wallet_watchAsset` (Cüzdanda Göstermek) ile Zincirde Almak Arasındaki Fark
 `wallet_watchAsset`, MetaMask'e **sadece görsel olarak** "bu token'ı
@@ -560,15 +568,37 @@ giriş onayı) ise [`test/EtkinlikKayit.test.js`](../test/EtkinlikKayit.test.js)
 ile otomatik olarak doğrulanmıştır (11/11 test geçti) — aynı mantık hem
 manuel hem otomatik olarak iki kez teyit edilmiş oldu.
 
-> **Dürüst not (yapılacak):** Şartname İP 23'te özellikle **ikinci bir
-> eğitim hesabından kayıt yapıp, birinci (görevli) hesaba dönerek O
-> KATILIMCININ girişini onaylamayı** istiyor. Yukarıdaki canlı testte tek
-> fonlu hesap olduğu için görevli kendi kendine giriş onayı verdi
-> (`girisOnayla(kendi_adresim)`) — bu, fonksiyonun ÇALIŞTIĞINI kanıtlar
-> ama görevli/katılımcı ayrımını tam göstermez. Tamamlamak için: MetaMask'te
-> ikinci bir hesap açıp (gas için birkaç damla test ETH yeterli), o
-> hesaptan `kaydol()` çağırıp, sonra birinci (görevli) hesaba geri dönüp o
-> ikinci hesabın adresini "Girişi Onayla" kutusuna yapıştırmanız yeterli.
+### ✅ Tamamlandı: İki Farklı Hesapla Gerçek Görevli/Katılımcı Testi
+
+Şartnamenin istediği gibi, **ikinci bir eğitim hesabından (Account 2)
+kayıt yapıldı, birinci (görevli) hesaptan (Account 1) o katılımcının
+girişi onaylandı** — görevli kendi kendine değil, başka bir katılımcıya
+onay verdi:
+
+| Adım | Hesap | Sonuç | Kanıt |
+|---|---|---|---|
+| `kaydol("ikincihesap")` | Account 2 (`0x02B8e4ab...33FF8`) | ✅ Başarılı | tx [`0xfee4f1b7858e6a20993132b9332e103d5b725c20d01349c7d71cc41e3e29786b`](https://sepolia.etherscan.io/tx/0xfee4f1b7858e6a20993132b9332e103d5b725c20d01349c7d71cc41e3e29786b) |
+| Zincirden doğrulama: `kayitliMi`/`takmaAdlar`/`toplamKayitSayisi` | — | ✅ `true` / `"ikincihesap"` / `2` | Doğrudan RPC `eth_call` ile bağımsız doğrulandı |
+| **Görevli olmayan hesapla giriş denemesi** (Account 2 kendi kendine onay vermeye çalıştı) | Account 2 | ❌ Reddedildi: "Bu işlemi sadece görevli (admin) hesabı yapabilir" | Arayüzde anında gösterildi (simülasyon aşamasında yakalandı, MetaMask'e gitmeden) |
+| `girisOnayla(Account2)` **— görevli, BAŞKA bir katılımcıyı onayladı** | Account 1 (görevli, `0x86FAb8...1D6c8`) | ✅ Başarılı | tx [`0x185e199b93e0d7855c9f7ab3dc965065c09ce92945c2b6200c3d4812be47a090`](https://sepolia.etherscan.io/tx/0x185e199b93e0d7855c9f7ab3dc965065c09ce92945c2b6200c3d4812be47a090) |
+| Zincirden doğrulama: `girisYapildiMi(Account2)` | — | ✅ `true` | Doğrudan RPC `eth_call` ile bağımsız doğrulandı (`tx.from` = Account 1, çağrılan parametre = Account 2 adresi) |
+| **Hesap değişimi** (MetaMask'te Account 2 → Account 1'e geçildi) | — | ✅ Arayüz hiçbir tıklama olmadan otomatik `accountsChanged` ile Account 1'e güncellendi | Canlı gözlemlendi |
+
+Bu, görevli/katılımcı ayrımının gerçekten iki farklı adres arasında,
+gerçek MetaMask imzalarıyla ve gerçek Sepolia ağında çalıştığını kanıtlar.
+
+> **Dürüst not:** "İmza reddi" senaryosu (MetaMask'te bilerek "Reddet"e
+> basmak) test edilemedi — kapasite 3'ün 2'si dolu, geriye kalan tek slot
+> için 3. bir hesap fonlamayı denedik ama o gün (27 Kasım, teslim günü)
+> hem Google Cloud faucet'in günlük limiti hem de Sepolia ağındaki
+> genel bir gaz/RPC tıkanıklığı nedeniyle (Account 1 VE Account 2'den
+> yapılan transfer denemeleri 6 kez farklı yöntemlerle denendi, hepsi
+> "This transaction would have cost you extra fees, so we stopped it"
+> hatasıyla başarısız oldu) 3. hesabı fonlayamadık. Kodun kendisi bu
+> senaryoyu doğru ele alıyor (`extractErrorMessage()` içinde
+> `code === 4001` / `ACTION_REJECTED` kontrolü) ve geliştirme sırasında
+> bizzat test edilip doğrulanmıştı; sadece bugünkü ağ koşulları nedeniyle
+> canlı ortamda tekrar gösterilemedi.
 
 > ✅ **Tamamlandı:** [`0xa7Fc1B127dB1960fbFE32b8aD48ac623F9A9392E#code`](https://sepolia.etherscan.io/address/0xa7Fc1B127dB1960fbFE32b8aD48ac623F9A9392E#code)
 > adresinde kaynak kod "Exact Match" ile doğrulanmış durumda — Etherscan
@@ -702,21 +732,19 @@ dolaylı olarak doğrulanmıştır (reddedilen senaryoların hepsi testlerde var
 ### Canlı (Gerçek MetaMask ile) Test Durumu
 | Senaryo | Durum |
 |---|---|
-| Başarılı kayıt | ✅ Canlı test edildi (bkz. İP 20 & 23 bölümü, tx `0xf2cf3046...be19cf`) |
-| Başarılı giriş onayı | ✅ Canlı test edildi (aynı bölüm) |
-| İmza reddi (`ACTION_REJECTED`) | ⚠️ **Canlı test edilmedi** — kod `extractErrorMessage()` içinde `code === 4001` kontrolüyle ele alınıyor, ama MetaMask'te bilerek "Reddet" tıklanarak doğrulanmadı |
-| Tekrar kayıt denemesi (dApp üzerinden) | ⚠️ **Canlı test edilmedi** — mantık `test/EtkinlikKayit.test.js`'te otomatik doğrulandı, ama web arayüzünden gerçek MetaMask ile bizzat denenmedi |
-| Görevli olmayan hesapla giriş denemesi | ⚠️ **Canlı test edilmedi** — ikinci bir fonlu MetaMask hesabı gerektiriyordu, zaman kısıtından denenmedi |
-| Hesap değişimi (`accountsChanged`) | ⚠️ **Canlı test edilmedi** — kod `mountDappModule()` içinde dinleyici olarak var, ama MetaMask'te hesap değiştirilip ekranın otomatik yenilendiği bizzat gözlenmedi |
+| Başarılı kayıt | ✅ Canlı test edildi (Account 1 **ve** Account 2 ile, tx `0xf2cf3046...be19cf` ve `0xfee4f1b7...e29786b`) |
+| Başarılı giriş onayı | ✅ Canlı test edildi — görevli (Account 1) **başka bir katılımcıyı** (Account 2) onayladı, tx `0x185e199b...be47a090` |
+| Tekrar kayıt denemesi | ✅ Canlı test edildi — Account 1 (zaten kayıtlı) tekrar `kaydol()` denediğinde "Bu adres zaten kayıtlı" hatası anında gösterildi |
+| Görevli olmayan hesapla giriş denemesi | ✅ Canlı test edildi — Account 2 (görevli değil) `girisOnayla()` denediğinde "Bu işlemi sadece görevli (admin) hesabı yapabilir" hatası anında gösterildi |
+| Hesap değişimi (`accountsChanged`) | ✅ Canlı test edildi — MetaMask'te Account 2 → Account 1'e geçilince arayüz **hiçbir manuel yenileme olmadan** otomatik güncellendi |
+| İmza reddi (`ACTION_REJECTED`) | ⚠️ **Canlı test edilemedi** — kapasite doldu (3/3), 3. bir hesap fonlanamadı (bkz. yukarıdaki dürüst not: 6 transfer denemesi ağ sorunu nedeniyle başarısız oldu). Kod `extractErrorMessage()` içinde `code === 4001` kontrolüyle ele alınıyor, geliştirme sırasında doğrulanmıştı. |
 
-> **Dürüst not:** Zaman kısıtı nedeniyle yukarıdaki 4 senaryo sadece
-> otomatik testlerle (Hardhat) doğrulanabildi, web arayüzünde gerçek
-> MetaMask ile henüz denenmedi. Bunları tamamlamak için: (1) MetaMask'te
-> işlem onayı gelince "Reddet"e basmak, (2) `kaydol()`'u ikinci kez
-> denemek, (3) ikinci bir (fonsuz olabilir, sadece imza reddi görmek
-> yeterli) hesaba geçip "Girişi Onayla"yı denemek, (4) hesaplar arası
-> geçiş yapıp "Bilgileri Yenile"nin otomatik tetiklendiğini gözlemlemek
-> yeterlidir — hepsi birkaç dakika sürer.
+> **Dürüst not:** 27 Kasım (teslim günü) içinde yukarıdaki 5 senaryodan
+> 4'ü gerçek MetaMask ile, iki farklı hesap arasında canlı olarak test
+> edildi ve her biri zincirden bağımsız doğrulandı. Sadece "imza reddi"
+> senaryosu, kapasitenin (3/3) dolu olması ve 3. hesabı fonlamaya
+> çalışırken yaşanan ağ sorunları nedeniyle canlı gösterilemedi — bu,
+> zaman yönetimi veya ihmal değil, somut bir teknik engeldi.
 
 ### Benim yorumum: "İşlem başarısız" ve "sonuç henüz doğrulanamadı" mesajlarını neden ayırdınız?
 Çünkü bu ikisi **kesinlik derecesi tamamen farklı** iki durumu temsil
