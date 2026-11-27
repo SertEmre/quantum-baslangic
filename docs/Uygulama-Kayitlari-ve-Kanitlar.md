@@ -98,10 +98,21 @@ ederim.
 ### Faucet Bilgileri
 | Alan | Değer |
 |---|---|
-| Kullanılan Faucet adresi | Etherscan'in kendi Sepolia faucet hizmeti (sepolia-faucet.etherscan.io) |
-| Talep edilen test ETH miktarı | — (cüzdandaki güncel bakiye 0.0403 ETH; deploy/register işlemlerinde gas olarak bir kısmı harcandı, bkz. ekran görüntüsü) |
+| Kullanılan Faucet | **Google Cloud Web3 Faucet** — https://cloud.google.com/application/web3/faucet/ethereum/sepolia |
+| Talep edilen/alınan test ETH miktarı | **0.05 ETH** (bu faucet'in sabit, tek seferlik gönderim miktarı) |
+| Fonlama tx hash | [`0xd4771e7b4299471615f424649fa033cdc349c1dcd50a9cb2c9318908008147b2`](https://sepolia.etherscan.io/tx/0xd4771e7b4299471615f424649fa033cdc349c1dcd50a9cb2c9318908008147b2) |
+| Gönderen (faucet) adresi | `0x6EFB29CEe3b414272EB7A8F3Ebabf873D36bC033` |
+| Zaman | 25 Ekim 2026, 22:09:48 UTC |
 | Cüzdan adresi | `0x86FAb8EDB3Dc20C63d3194DF43F5BCb87781D6c8` |
 | Ekran görüntüsü | [`ip14-15-faucet-bakiyeleri-eth-ve-usdc.png`](screenshots/ip14-15-faucet-bakiyeleri-eth-ve-usdc.png) |
+
+> **Doğrulama yöntemi:** Hangi faucet'in kullanıldığı hafızadan değil,
+> zincirden teyit edildi — cüzdana gelen **en eski gelen ETH işlemi**
+> Etherscan'de bulunup gönderen adres ve miktar (0.05 ETH, Google Cloud
+> Web3 Faucet'in bilinen sabit gönderim tutarı) karşılaştırıldı. Gönderen
+> adresin Etherscan'de genel bir "name tag" etiketi yok, ama tutarın tam
+> olarak eşleşmesi ve bu faucet'in söylenen davranışıyla örtüşmesi güçlü
+> bir doğrulamadır.
 
 ### PoW Faucet'teki Tarayıcı Madenciliği Neden Sepolia'da Blok Üretmekle Aynı Şey Değildir?
 Bazı faucet'ler, kötüye kullanımı (bot'ların sürekli test ETH çekmesini)
