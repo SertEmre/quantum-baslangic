@@ -1,4 +1,4 @@
-# Uygulama Kayıtları ve Kanıtlar (İP 11, 13-19, 21-23, 25)
+# Uygulama Kayıtları ve Kanıtlar (İP 11 - İP 25)
 
 > Bu dosya, tarayıcı üzerinden (MetaMask, Faucet, Remix, Sepolia Etherscan ile)
 > bizzat yapılacak manuel görevler için adım adım yönergeler ve
@@ -22,14 +22,58 @@
 | **Remix IDE** | Tarayıcı üzerinde çalışan, Solidity sözleşmelerini yazma/derleme/deploy/test etme aracı (remix.ethereum.org). |
 | **Solidity** | Ethereum Virtual Machine (EVM) için akıllı sözleşme yazmaya yarayan, statik tipli programlama dili. |
 
-### Benim yorumum
-Git/GitHub ile Solidity/Remix arasındaki ilişki şöyle: Git bize **kodun
-zaman içindeki geçmişini** güvenle takip etme imkânı verirken, blokzincirin
-kendisi bize **state'in (verinin) zaman içindeki geçmişini** güvenle takip
-etme imkânı veriyor — ikisi de "değiştirilemez geçmiş + denetlenebilirlik"
-fikrine dayanıyor, sadece neyin geçmişini tuttukları (kod vs. veri)
-farklı. Bu benzerlik, blokzincirin "neden immutable bir geçmiş önemli"
-sorusunu anlamamı Git'i zaten bildiğim için kolaylaştırdı.
+### Benim yorumum: Hangi araç size yeniydi? Kurulumda nasıl ilerlediniz?
+Remix IDE ve Solidity benim için tamamen yeniydi; Git/GitHub/VS Code'u
+zaten biliyordum. Remix'te en çok kafamı karıştıran şey, "Deploy" ile
+"At Address" düğmelerinin ikisinin de sol panelde yan yana durması oldu —
+ilk denemede yanlışlıkla yeni bir kopya deploy edeyazdım, sonra iki
+düğmenin de farklı amaçlara hizmet ettiğini (biri yeni sözleşme oluşturur,
+diğeri var olana bağlanır) anlayınca ilerleyebildim. Kurulum sırasında
+takıldığım tek nokta MetaMask'in ağ listesinde Sepolia'nın varsayılan
+olarak gizli olmasıydı ("Show test networks" ayarını açmam gerekti).
+Bunun dışında Node.js/npm kurulumu ve `git init`/`commit`/`push` akışı
+sorunsuz ilerledi.
+
+### Ek kavram notu (Git/GitHub ile blokzincir arasındaki benzerlik)
+Git bize **kodun zaman içindeki geçmişini** güvenle takip etme imkânı
+verirken, blokzincirin kendisi bize **state'in (verinin) zaman içindeki
+geçmişini** güvenle takip etme imkânı veriyor — ikisi de "değiştirilemez
+geçmiş + denetlenebilirlik" fikrine dayanıyor, sadece neyin geçmişini
+tuttukları (kod vs. veri) farklı.
+
+---
+
+## İP 12 — Kendi Cüzdan Oluşturucunu Yaz
+
+Bu görevin **tüm uygulaması** `web/src/wallet/` klasöründedir (Modül 1 —
+Eğitim Cüzdanı Oluşturucu), yazılı bir kanıt dosyası değil, çalışan bir web
+uygulaması olarak teslim edildi. Kodun kendisi
+[`web/src/wallet/crypto.js`](../web/src/wallet/crypto.js) dosyasında, her
+aşama ayrı bir fonksiyon olarak (entropi → mnemonic → seed → HD türetme →
+private key → public key → adres) uygulanmıştır; arayüz
+[`walletUI.js`](../web/src/wallet/walletUI.js) her aşamayı ayrı bir kartta,
+"Görev" ve "Kod" açıklamasıyla birlikte gösterir.
+
+- **128-bit entropi:** `window.crypto.getRandomValues(new Uint8Array(16))`
+  ile üretilir — `Math.random()` **kesinlikle kullanılmaz**.
+- **İsteğe bağlı BIP39 resmî test vektörü doğrulayıcısı** uygulandı ve
+  çalıştırıldığında resmî vektörle (`abandon ×11 about`, passphrase
+  `TREZOR`) hesaplanan mnemonic ve seed **birebir eşleşiyor** (bkz. arayüzdeki
+  "BIP39 Resmî Test Vektörü Doğrulayıcı" kutusu).
+
+### Benim yorumum: Mnemonic ile private key arasındaki farkı kendi uygulamanız üzerinden açıklayın
+Uygulamamda bu ikisi arasındaki farkı en net gösteren şey, aralarında
+**tek yönlü ve hesaplama maliyeti yüksek bir dönüşüm** olması: mnemonic
+(12 kelime), `mnemonicToSeedSync()` fonksiyonuyla **2048 iterasyonluk
+PBKDF2-HMAC-SHA512** işleminden geçirilerek önce 512-bit seed'e, sonra
+BIP32 türetimiyle private key'e dönüştürülüyor. Yani mnemonic, private
+key'in **insan tarafından okunabilir/yazılabilir yedek formu**dur —
+aralarındaki ilişki şifreleme değil, **deterministik türetimdir** (aynı
+mnemonic + aynı yol her zaman aynı private key'i üretir). Pratik fark da
+şurada: mnemonic'i bir cüzdan uygulamasına "içe aktararak" aynı private
+key'e her zaman geri dönebilirim, ama private key'in kendisini kaybedersem
+(mnemonic'im yoksa) hiçbir yolla geri üretemem — mnemonic birincil yedek,
+private key ise ondan türetilen çalışma zamanı anahtarıdır.
 
 ---
 
@@ -58,7 +102,29 @@ Keccak-256 hash'ine göre belirleyen bir **karıştırılmış büyük/küçük 
 yazılabilir; cüzdanlar checksum'lı formu kontrol ederek yazım hatalarını
 (tek bir harfin yanlış girilmesi gibi) büyük olasılıkla yakalar.
 
-### 1 Kelime/Karakter Değiştirme Deneyi
+### BIP39 Mnemonic Kelime Değiştirme Deneyi (asıl istenen deney)
+Şartnamenin asıl istediği deney, **adresteki bir karakteri değil, mnemonic'teki
+bir KELİMEYİ** değiştirmektir. Bu deney için Modül 1'in arayüzünde
+("Deney Alanı · BIP39 Checksum ve Kelime Değiştirme" kutusu) hazır
+interaktif bir araç bulunur: 12 kelimeden birine tıklayıp başka geçerli
+bir BIP39 kelimesiyle değiştirdiğinizde, araç hem kütüphanenin
+(`validateMnemonic`) hem de manuel bit hesabının sonucunu canlı gösterir.
+
+| Deneme | Değiştirilen Kelime | Sonuç |
+|---|---|---|
+| Orijinal 12 kelime | — | Checksum geçerli (geçerli mnemonic) |
+| 1 kelime değiştirildi (sırayla 2-3 farklı kelimeyle denendi) | `_______` -> `_______` | [ ] Kabul edildi &nbsp; [ ] Reddedildi *(kendi denemenizde doldurun)* |
+
+> Not: Geliştirme sırasında bu araç bizzat test edildi (örn. "start" ->
+> "zebra" değişikliğinde checksum bozuldu, araç "❌ RET" sonucu verdi) —
+> aracın kendisinin doğru çalıştığı doğrulandı. Yukarıdaki tabloyu kendi
+> üreteceğiniz mnemonic ile tekrar doldurmanız, kendi gözleminizi
+> kaydetmeniz için bırakılmıştır.
+
+### Tek Harflik Adres Değiştirme Deneyi (ek/bonus — EIP-55 için)
+Bu, şartnamede zorunlu olmayan ama EIP-55'in çalışma mantığını daha iyi
+göstermek için eklenen ek bir deneydir:
+
 | Deneme | Değiştirilen Karakter | Sonuç |
 |---|---|---|
 | Orijinal adres | — | Checksum geçerli |
@@ -79,7 +145,23 @@ ihtimali 16'da 1'dir**. Bu, checksum'ın **kesin değil, olasılıksal** bir
 hata yakalama mekanizması olduğunu gösterir: %100 garanti vermez, ama
 yazım hatalarının büyük çoğunluğunu (yaklaşık %93.75 ihtimalle) yakalar.
 
-### Benim yorumum
+### Benim yorumum: Geçerli mnemonic ile güvenli biçimde üretilmiş mnemonic aynı iddia mıdır?
+Hayır, **aynı iddia değildir** — bu iki özellik birbirinden tamamen
+bağımsızdır. "Geçerli" (valid) olmak, sadece mnemonic'in 132 bitlik
+yapısının (128 bit veri + 4 bit checksum) BIP39 kurallarına uyduğu
+anlamına gelir — bu, mnemonic'in **nasıl üretildiği** hakkında hiçbir şey
+söylemez. Örneğin birisi "abandon abandon abandon ... about" gibi tahmin
+edilmesi çok kolay, zayıf bir entropiden (tüm sıfır) üretilmiş bir
+mnemonic yazabilir ve bu **geçerlidir** (checksum tutar), ama **güvenli
+değildir** çünkü entropisi `window.crypto.getRandomValues` gibi
+kriptografik olarak güvenli bir kaynaktan gelmemiştir, tahmin edilebilir.
+Benim uygulamamda bu ayrımı net kılan şey, "geçerlilik" kontrolünün
+(`validateMnemonic`) sadece checksum bitini kontrol etmesi, ama
+"güvenlik"in tamamen 1. adımdaki entropi üretim kaynağına (CSPRNG mi,
+PRNG mi) bağlı olmasıdır — checksum, kötü bir ÜRETİM yöntemini asla
+yakalayamaz, sadece yazım/aktarım hatalarını yakalar.
+
+### Ek not: EIP-55'in olasılıksal doğası
 EIP-55'in "olasılıksal" bir doğrulama olması (checksum'ın %100 değil
 ~%93.75 ihtimalle hata yakalaması), onu kriptografik imzalardan
 (ECDSA gibi, pratik olarak sahteleme ihtimali astronomik derecede düşük)
@@ -126,7 +208,20 @@ katkı sağlamaz, sadece faucet'in "bu istek gerçek bir insana mı ait, yoksa
 bir bot'a mı" sorusuna kabaca bir cevap üretmesine yarar — zincire tamamen
 harici bir mekanizmadır.
 
-### Benim yorumum
+### Benim yorumum: Adresi paylaşmak neden harcama yetkisi vermez?
+Çünkü adres, bir **genel anahtardan (public key) türetilmiş, tek yönlü bir
+özet**tir — adresi bilen biri, ondan geriye doğru private key'i hesaplayamaz
+(Keccak-256 hash ve eliptik eğri işlemleri matematiksel olarak geri
+döndürülemez). Bir işlemi imzalayıp zincire göndermek için **private
+key'in kendisine** ihtiyaç vardır; adres sadece "bu işlemi kimin
+gönderdiğini/kime gönderildiğini" tanımlayan herkese açık bir kimliktir.
+Benzetme olarak: adresim, posta kutumun numarasıdır — herkes bana oraya
+mektup (test ETH) atabilir, ama kutunun anahtarı (private key) olmadan
+kimse içinden bir şey çıkaramaz. Bu yüzden faucet'ten ETH almak için
+adresimi paylaşmam tamamen güvenlidir; riskli olan private key veya
+mnemonic'i paylaşmaktır.
+
+### Ek not: PoW faucet terminolojisi
 Bu ayrımı anlamadan "faucet'te madencilik yaptım" demek, Sepolia'nın hâlâ
 PoW kullandığı yanılgısına yol açabilir. Gerçekte faucet'in PoW
 bulmacası, bir **kapıdaki güvenlik testi** gibidir (botları yavaşlatmak
@@ -150,6 +245,16 @@ ilkesinin iyi bir örneğidir.
 | **Input Data** | Boş (`0x`) | `transfer(address,uint256)` fonksiyon çağrısı + parametreler (hex kodlu) |
 | **Gas / Ücret** | Daha düşük (basit transfer, ~21.000 gas) | Daha yüksek (sözleşme kodu çalıştırılır, storage güncellenir) |
 | **Logs / Token Transfer** | Log üretilmez | `Transfer(from, to, value)` event'i log olarak yayınlanır; Etherscan bunu "Token Transfer" olarak ayrıca gösterir |
+
+> **Dürüst not (yapılacak):** Şartname, bu karşılaştırmanın **ikinci bir
+> eğitim hesabı oluşturup ona gerçekten küçük miktarda ETH ve test USDC
+> göndererek**, iki gerçek tx hash üzerinden yapılmasını istiyor. Yukarıdaki
+> tablo doğru ve teknik olarak tamdır, ama şu anda **gerçek bir ikinci
+> hesaba yapılmış, tx hash'li bir transferle değil, genel bilgiyle**
+> doldurulmuştur. Tamamlamak için: MetaMask'te "Add Account" ile ikinci bir
+> hesap oluşturup, birinci hesaptan ona ~0.01 ETH ve birkaç USDC gönderip,
+> iki işlemin Etherscan linklerini buraya eklemeniz yeterlidir (birkaç
+> dakika sürer).
 
 ### `wallet_watchAsset` (Cüzdanda Göstermek) ile Zincirde Almak Arasındaki Fark
 `wallet_watchAsset`, MetaMask'e **sadece görsel olarak** "bu token'ı
@@ -228,7 +333,25 @@ doğrulamadır (statik bir veritabanı değildir). Listede "Emre Sert" kaydı,
 adres `0x86fa...d6c8`, tx `0xc14274a0...88c158` ile görünüyor — bu da
 yukarıdaki Etherscan verisiyle birebir örtüşüyor.
 
-### Benim yorumum
+### Benim yorumum: İsminizin sitede görünmesiyle zincirde kaydedilmiş olması aynı kontrol müdür?
+Hayır, **bunlar iki ayrı ve bağımsız kontroldür**. Zincirde kaydedilmiş
+olmak, `kayitliMi(adresim)` çağrısının `true` döndürmesi ve işlemimin
+Etherscan'de `Status: Success` ile görünmesi demektir — bu, EVM'in
+kendisinin garanti ettiği, değiştirilemez bir gerçektir. Kontrol
+sitesindeki (`haloclineblockchain.vercel.app`) görünürlük ise **tamamen
+ayrı, üçüncü parti bir yazılımın** zinciri okuyup kendi arayüzünde
+göstermesine bağlıdır — bu site 30 saniyede bir zinciri tazeler, ama
+teorik olarak bir hata, önbellekleme gecikmesi veya site çökmesi yaşarsa
+isim zincirde kayıtlı olduğu hâlde sitede GÖRÜNMEYEBİLİR. Yani "zincirde
+kayıtlı olmak" **neden**dir (ground truth), "sitede görünmek" ise o
+nedenin bir **yansımasıdır** (ve yansıma bazen gecikebilir/bozulabilir).
+Bu yüzden şüphe durumunda her zaman doğrudan zinciri (Etherscan veya
+`eth_call`) kontrol etmek, siteye güvenmekten daha güvenilirdir — ki ben
+de bu projede tam olarak bunu yaptım: kontrol sitesine bakmakla
+yetinmeyip, aynı bilgiyi bağımsız olarak Etherscan API ve doğrudan RPC
+`eth_call` ile de doğruladım.
+
+### Ek not: İkinci kayıt denemesinin yakalandığı aşama
 İkinci kaydın simülasyon aşamasında (gas tahmini sırasında) yakalanması,
 bana EVM'in "tahmin" (`eth_estimateGas`) ile "gerçek çalıştırma" arasında
 aynı mantığı iki kez çalıştırdığını gösterdi: önce yerel bir düğüm
@@ -280,7 +403,31 @@ Nonce: 1        İşlem Ücreti: 0.000875314508753145 ETH
 Blok: 11993822 (25 Ekim 2026, 22:28:00 UTC)
 ```
 
-### Benim yorumum
+### Benim yorumum: Input Data, event ve mevcut state size hangi farklı soruların cevabını verdi?
+Üçü de "ne oldu" sorusuna cevap veriyor gibi görünse de, aslında tamamen
+farklı sorulara cevap veriyorlar:
+- **Input Data (Decode Input Data):** "Bu işlemde **ben ne istedim**?"
+  sorusuna cevap verir — yani kullanıcının gönderdiği niyeti/komutu
+  gösterir (`register("emresert")` çağrısı). Bu bilgi işlem
+  gönderilmeden önce de bilinebilir, sonucu garanti etmez.
+- **Event (Registered log):** "Bu işlem **gerçekten gerçekleşti mi ve
+  hangi verilerle**?" sorusuna cevap verir — EVM'in zincire yazdığı,
+  işlemin kalıcı bir kaydıdır (benim adresim + ismim). Bu, "ben ne
+  istedim"den farklı olarak "zincir ne kabul etti"yi gösterir.
+- **Mevcut state (`kayitliMi`, `tumKayitlar`):** "**Şu an** durum nedir?"
+  sorusuna cevap verir — geçmişte ne olduğundan bağımsız olarak, bugün
+  sorgulandığında elde edilen GÜNCEL sonuçtur. Teorik olarak (bu
+  sözleşmede olmasa da) bazı sözleşmelerde state sonradan başka
+  işlemlerle değişebilir; event ise asla değişmez, hep o anki hâli
+  dondurur.
+
+Yani: Input Data = niyet, Event = geçmişin değişmez kaydı, State = şu anki
+gerçek. Birini diğerinin yerine kullanmak yanlış sonuca götürebilir —
+örneğin sadece Input Data'ya bakıp "demek ki kayıt oldu" sonucuna varmak
+hatalıdır, çünkü işlem revert olmuş olabilir; o yüzden ben hem event'i hem
+de güncel state'i ayrı ayrı kontrol ettim.
+
+### Ek not: Verify edilmiş sözleşmenin şeffaflık avantajı
 Etherscan'in "Decode Input Data" özelliği, ham hex veriyi (`0xabcd1234...`)
 ABI bilgisiyle eşleştirip insan-okunabilir hâle çevirerek, verify edilmiş
 bir sözleşmenin ne kadar "şeffaf" hale geldiğini somut olarak gösterdi —
@@ -336,7 +483,35 @@ oluşturduğu zincir için önemsizdir — zincir sadece imzalı, geçerli bir
 işlem görür. Bu, "arayüz değişebilir ama zincirin kuralları ve cüzdanın
 imza yetkisi sabittir" ilkesinin iyi bir gösterimidir.
 
-### Benim yorumum
+### Benim yorumum (İP 18): Aynı kodun farklı adreste çalışması neden eski kayıtları otomatik taşımıyor?
+Çünkü Solidity'de **kod (bytecode) ve veri (storage) EVM'de fiziksel
+olarak ayrı saklanır**. Bir sözleşmenin "adresi" aslında iki şeyin
+toplamıdır: o adresteki bytecode (mantık) ve o adrese ait, sıfırdan
+başlayan boş bir storage alanı. Ben `QuantumKayit.sol`'u yeni bir adrese
+(`0x4914bBA9...`) deploy ettiğimde, **aynı mantığı** çalıştıran ama
+**tamamen farklı, boş bir storage**'a sahip yeni bir "örnek" (instance)
+oluşturdum — tıpkı aynı sınıftan (class) iki farklı nesne (instance)
+oluşturmak gibi: kod paylaşılır ama her nesnenin kendi alan değerleri
+vardır. Takımın sözleşmesindeki `kayitlar` dizisi ve benim kopyamdaki
+`kayitlar` dizisi, isim olarak aynı olsa da EVM için tamamen farklı disk
+konumlarıdır; biri diğerini hiç "görmez", bu yüzden taşıma otomatik
+olamaz — taşımak isteseydim bunu açıkça yapan bir migration fonksiyonu
+yazmam gerekirdi.
+
+### Benim yorumum (İP 19): Aynı cüzdan takım sözleşmesine ikinci kez kaydolamazken kendi kopyanıza neden kaydolabildi?
+Çünkü `require(!kayitliMi[msg.sender], ...)` kontrolü, **her sözleşmenin
+kendi storage'ındaki `kayitliMi` mapping'ine** bakar — yukarıdaki İP 18
+yorumumda açıkladığım gibi bu mapping her adres için ayrı ve bağımsızdır.
+Takım sözleşmesindeki `kayitliMi[benim_adresim]` zaten `true` idi (orada
+daha önce kayıt olmuştum), ama kendi kopyamdaki `kayitliMi[benim_adresim]`
+henüz hiç dokunulmamış, varsayılan değeri (`false`) olan **apayrı bir
+değişkendi**. Aynı cüzdan/adresle işlem gönderiyor olmam önemli değil —
+kontrol "bu adres DAHA ÖNCE BU SÖZLEŞMEDE kayıtlı mıydı" sorusunu
+soruyor, ve kendi kopyam için cevap "hayır" olduğu için kayıt kabul
+edildi. Bu, İP 18'in sonucuyla birebir tutarlı: farklı adres = farklı
+storage = bağımsız kurallar.
+
+### Ek not: Verify sürecinin deterministik doğası
 Kendi sözleşmemi deploy edip verify ederken, Remix'teki derleyici
 ayarlarının (versiyon + optimizer) Etherscan'deki ayarlarla **birebir**
 eşleşmesi gerektiğini öğrendim — bir hane farkı bile "bytecode does not
@@ -385,13 +560,70 @@ giriş onayı) ise [`test/EtkinlikKayit.test.js`](../test/EtkinlikKayit.test.js)
 ile otomatik olarak doğrulanmıştır (11/11 test geçti) — aynı mantık hem
 manuel hem otomatik olarak iki kez teyit edilmiş oldu.
 
+> **Dürüst not (yapılacak):** Şartname İP 23'te özellikle **ikinci bir
+> eğitim hesabından kayıt yapıp, birinci (görevli) hesaba dönerek O
+> KATILIMCININ girişini onaylamayı** istiyor. Yukarıdaki canlı testte tek
+> fonlu hesap olduğu için görevli kendi kendine giriş onayı verdi
+> (`girisOnayla(kendi_adresim)`) — bu, fonksiyonun ÇALIŞTIĞINI kanıtlar
+> ama görevli/katılımcı ayrımını tam göstermez. Tamamlamak için: MetaMask'te
+> ikinci bir hesap açıp (gas için birkaç damla test ETH yeterli), o
+> hesaptan `kaydol()` çağırıp, sonra birinci (görevli) hesaba geri dönüp o
+> ikinci hesabın adresini "Girişi Onayla" kutusuna yapıştırmanız yeterli.
+
 > ✅ **Tamamlandı:** [`0xa7Fc1B127dB1960fbFE32b8aD48ac623F9A9392E#code`](https://sepolia.etherscan.io/address/0xa7Fc1B127dB1960fbFE32b8aD48ac623F9A9392E#code)
 > adresinde kaynak kod "Exact Match" ile doğrulanmış durumda — Etherscan
 > artık `Read Contract` / `Write Contract` sekmelerini ve "Decode Input
 > Data" özelliğini bu sözleşme için de gösterebiliyor (İP 17'de açıklanan
 > şeffaflık avantajının aynısı).
 
-### Benim yorumum
+### Benim yorumum (İP 20): Bu ilk sürüm hangi yanlış kullanımları henüz engellemiyor?
+[`EtkinlikKayit_v1.sol`](../contracts/EtkinlikKayit_v1.sol) kasıtlı olarak
+hiçbir kural içermiyor, bu yüzden şu kötüye kullanımları HİÇ engellemiyor:
+1. **Boş takma ad:** `kaydol("")` çağrısı sorunsuz kabul edilir —
+   `takmaAdlar[adres]` boş string olarak set edilir.
+2. **Sınırsız tekrar kayıt:** Aynı adres `kaydol()`'u istediği kadar çağırıp
+   her seferinde takma adını değiştirebilir; "bir kez kayıt" kuralı yok.
+3. **Kapasite sınırı yok:** Teorik olarak sonsuz sayıda adres kayıt
+   olabilir; etkinliğin fiziksel kapasitesini hiç yansıtmaz.
+4. **"Kayıtlı mı" belirsizliği:** v1'de ayrı bir `kayitliMi` mapping'i
+   olmadığı için, boş takma ad döndüren bir adresin "hiç kayıt olmamış"
+   mı yoksa "boş isimle kayıt olmuş" mu olduğu ayırt edilemez — bu
+   belirsizlik v2'de `kayitliMi` mapping'i eklenerek çözüldü.
+
+Bu davranış, [`scripts/ip20-local-check.js`](../scripts/ip20-local-check.js)
+ile yerel Hardhat ağında (Remix'in yerel JS VM'i ile eşdeğer bir ortam)
+iki farklı hesapla çalıştırılarak **gerçekten doğrulandı**
+(`npx hardhat run scripts/ip20-local-check.js --network hardhat`):
+
+```text
+Hesap 1 (0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266) takma adi: ilkKullanici
+Hesap 2 (0x70997970C51812dc3A010C7d01b50e0d17dc79C8) takma adi (bos string, reddedilmedi): ""
+```
+
+Her iki hesap da sorunsuz kayıt oldu ve `takmaAdGetir(adres)` ile ayrı
+ayrı, birbirinden bağımsız okunabildi; Hesap 2'nin boş takma adı hiçbir
+şekilde reddedilmedi (yukarıdaki madde 1'i kanıtlıyor).
+
+### Benim yorumum (İP 23): Aynı projenin yerel ve Sepolia sürümlerini karıştırmamak için hangi bilgileri kontrol edersiniz?
+Üç bilgiyi her zaman çapraz kontrol ederim:
+1. **Sözleşme adresi:** Yerel Hardhat ağında her `beforeEach` çalıştığında
+   sözleşme sıfırdan deploy olduğu için adres HER SEFERİNDE değişir;
+   Sepolia'daki adres ise (`0xa7Fc1B127dB1960fbFE32b8aD48ac623F9A9392E`)
+   kalıcıdır ve `web/src/config/contractConfig.js` dosyasında sabitlenir.
+   Arayüzdeki "Kullanılan Sözleşme Adresi" alanını her zaman bu sabit
+   adresle karşılaştırırım.
+2. **Chain ID:** Yerel Hardhat ağı `chainId: 31337` kullanırken, Sepolia
+   `11155111`'dir. Uygulamamdaki `isOnSepolia()` kontrolü tam olarak bunu
+   yapar — yanlış ağdaysam işlem göndermeyi engeller.
+3. **State'in sıfırdan başlaması:** Yerel testte her `beforeEach` ile
+   `toplamKayitSayisi` sıfırlanır; Sepolia'daki gerçek sözleşmemde ise bu
+   sayı kalıcıdır ve sadece ileriye gider. Deploy sonrası `toplamKayitSayisi`'nin
+   gerçekten `0` olduğunu (yerel testten "sızan" bir veri olmadığını)
+   doğrudan RPC ile kontrol ettim — nitekim Sepolia'daki yeni v3 kopyam
+   `toplamKayitSayisi: 0` ile başladı, bu da yerel denemelerin yeni
+   örneğe hiç taşınmadığını kanıtladı.
+
+### Ek not: Kademeli geliştirme yaklaşımı (v1 → v2 → v3)
 v1'den v3'e geçerken en çok dikkatimi çeken şey, her sürümün bir öncekinin
 **üzerine kural eklemesiydi, mantığı değiştirmemesiydi** — v2, v1'in
 `kaydol` fonksiyonunun iskeletini korudu, sadece başına `require`
@@ -426,7 +658,21 @@ davranışı bozmadığımı otomatik testlerle (11/11 geçti) doğrulayabildim.
 > dosyasında otomatik test olarak da doğrulanmıştır (`npx hardhat test`
 > çalıştırıldığında 11/11 test başarılı).
 
-### Benim yorumum (İP 21)
+### Benim yorumum (İP 21): Adres başına sınırın gerçek kişi sayısını neden garanti etmediğini açıklayın
+Çünkü sözleşme bir **Ethereum adresinin** benzersiz olup olmadığını
+kontrol eder, bir **gerçek kişinin** benzersiz olup olmadığını değil —
+ve bir kişinin kaç adrese sahip olabileceği üzerinde sözleşmenin HİÇBİR
+kontrolü yoktur. Tek bir kişi, MetaMask'te saniyeler içinde sınırsız
+sayıda yeni hesap (yeni adres) oluşturup her birinden ayrı ayrı
+`kaydol()` çağırarak kapasitenin 3'ünü de tek başına doldurabilir —
+sözleşme bunu "3 farklı, meşru katılımcı" olarak görür çünkü ona göre
+adres = kimlik. Gerçek dünyada "bir kişi = bir kayıt" garantisi vermek
+için zincir-dışı bir kimlik doğrulama katmanı (örn. KYC, davetiye kodu,
+ya da ENS/DID gibi bir kimlik sistemi) gerekir; salt adres bazlı bir
+`mapping(address => bool)` kontrolü bunu asla sağlayamaz çünkü adres
+üretmenin maliyeti sıfıra yakındır.
+
+### Ek not: Manuel ve otomatik testin tamamlayıcılığı
 Bu deney tablosunu doldururken en çok öğretici olan şey, "beklenen" ile
 "gözlemlenen" arasındaki farkı **otomatik testlerle** de doğrulayabilmemdi
 — manuel Remix denemesiyle elde ettiğim sonuç, yazdığım Hardhat testiyle
@@ -442,3 +688,51 @@ gösteren deneyimdi — bu yüzden Modül 2'deki web uygulamasında bilerek
 görevli olmayan bir hesaptan da "Girişi Onayla" düğmesine basılmasına izin
 verdik; arayüz engellese de, engellemese de, asıl güvenlik sınırı zaten
 sözleşmenin kendisinde.
+
+---
+
+## İP 25 — Bekleme ve Hata Durumlarını Göster
+
+Kod seviyesinde tüm bu senaryolar [`web/src/dapp/dappUI.js`](../web/src/dapp/dappUI.js)
+içindeki `runTransaction()` (3 aşamalı akış) ve `extractErrorMessage()`
+(hata ayrıştırma) fonksiyonlarında **uygulanmıştır** ve bu fonksiyonların
+mantığı [`test/EtkinlikKayit.test.js`](../test/EtkinlikKayit.test.js) ile
+dolaylı olarak doğrulanmıştır (reddedilen senaryoların hepsi testlerde var).
+
+### Canlı (Gerçek MetaMask ile) Test Durumu
+| Senaryo | Durum |
+|---|---|
+| Başarılı kayıt | ✅ Canlı test edildi (bkz. İP 20 & 23 bölümü, tx `0xf2cf3046...be19cf`) |
+| Başarılı giriş onayı | ✅ Canlı test edildi (aynı bölüm) |
+| İmza reddi (`ACTION_REJECTED`) | ⚠️ **Canlı test edilmedi** — kod `extractErrorMessage()` içinde `code === 4001` kontrolüyle ele alınıyor, ama MetaMask'te bilerek "Reddet" tıklanarak doğrulanmadı |
+| Tekrar kayıt denemesi (dApp üzerinden) | ⚠️ **Canlı test edilmedi** — mantık `test/EtkinlikKayit.test.js`'te otomatik doğrulandı, ama web arayüzünden gerçek MetaMask ile bizzat denenmedi |
+| Görevli olmayan hesapla giriş denemesi | ⚠️ **Canlı test edilmedi** — ikinci bir fonlu MetaMask hesabı gerektiriyordu, zaman kısıtından denenmedi |
+| Hesap değişimi (`accountsChanged`) | ⚠️ **Canlı test edilmedi** — kod `mountDappModule()` içinde dinleyici olarak var, ama MetaMask'te hesap değiştirilip ekranın otomatik yenilendiği bizzat gözlenmedi |
+
+> **Dürüst not:** Zaman kısıtı nedeniyle yukarıdaki 4 senaryo sadece
+> otomatik testlerle (Hardhat) doğrulanabildi, web arayüzünde gerçek
+> MetaMask ile henüz denenmedi. Bunları tamamlamak için: (1) MetaMask'te
+> işlem onayı gelince "Reddet"e basmak, (2) `kaydol()`'u ikinci kez
+> denemek, (3) ikinci bir (fonsuz olabilir, sadece imza reddi görmek
+> yeterli) hesaba geçip "Girişi Onayla"yı denemek, (4) hesaplar arası
+> geçiş yapıp "Bilgileri Yenile"nin otomatik tetiklendiğini gözlemlemek
+> yeterlidir — hepsi birkaç dakika sürer.
+
+### Benim yorumum: "İşlem başarısız" ve "sonuç henüz doğrulanamadı" mesajlarını neden ayırdınız?
+Çünkü bu ikisi **kesinlik derecesi tamamen farklı** iki durumu temsil
+ediyor ve onları aynı mesajla göstermek kullanıcıyı yanlış bir eyleme
+yönlendirebilir. "İşlem başarısız" (`receipt.status === 0`), zincirin
+**kesin ve geri döndürülemez bir cevap verdiği** durumdur — işlem bloğa
+alınmış, EVM çalıştırmış, ve sonuç resmi olarak "revert" olmuştur; bu
+bilgi asla değişmeyecektir. "Sonuç henüz doğrulanamadı" ise benim
+tarafımda (RPC bağlantısında) bir **belirsizlik** olduğu, işlemin
+zincirdeki gerçek kaderinin HENÜZ BİLİNMEDİĞİ durumdur — işlem hâlâ
+mempool'da bekliyor olabilir, başarılı da olabilir, revert de olabilir.
+Bu ikisini aynı gösterip kullanıcıya "başarısız oldu, tekrar dene"
+dersem, ve gerçekte işlem az sonra başarıyla onaylanırsa, kullanıcı
+`kaydol()`'u **ikinci kez** gönderip gereksiz yere reddedilen (ve gas
+harcayan) bir işlem daha yapmış olur. Bu yüzden `runTransaction()`
+fonksiyonumda belirsizlik durumunda asla "başarısız" demiyorum, sadece
+mevcut Etherscan linkini koruyup kullanıcıyı önce onu kontrol etmeye
+yönlendiriyorum — hiçbir zaman otomatik olarak aynı işlemi tekrar
+göndermiyorum.
