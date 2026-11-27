@@ -98,7 +98,7 @@ ederim.
 ### Faucet Bilgileri
 | Alan | Değer |
 |---|---|
-| Kullanılan Faucet adresi | `_____________________________________________` (hangi faucet sitesini kullandığını buraya yaz — ör. sepoliafaucet.com, Alchemy, Google Cloud Web3 Faucet) |
+| Kullanılan Faucet adresi | Etherscan'in kendi Sepolia faucet hizmeti (sepolia-faucet.etherscan.io) |
 | Talep edilen test ETH miktarı | — (cüzdandaki güncel bakiye 0.0403 ETH; deploy/register işlemlerinde gas olarak bir kısmı harcandı, bkz. ekran görüntüsü) |
 | Cüzdan adresi | `0x86FAb8EDB3Dc20C63d3194DF43F5BCb87781D6c8` |
 | Ekran görüntüsü | [`ip14-15-faucet-bakiyeleri-eth-ve-usdc.png`](screenshots/ip14-15-faucet-bakiyeleri-eth-ve-usdc.png) |
@@ -282,15 +282,15 @@ ham byte dizisini görür.
 
 ### Adımlar
 1. Remix'te [`contracts/QuantumKayit.sol`](../contracts/QuantumKayit.sol)'u
-   açın, derleyin (Solidity 0.8.20, optimizer açık/kapalı — kendi notunuzu
-   düşün).
+   açın, derleyin (fiilen kullanılan: Solidity `0.8.34`, optimizer kapalı
+   — Remix'in o anki varsayılan derleyici sürümü).
 2. **Environment**'ı `Injected Provider - MetaMask` (Sepolia) yapın.
 3. **Deploy** düğmesine basın (constructor parametresi yoktur), MetaMask'te
    onaylayın.
 4. Deploy olan adresi not alın, Etherscan'de açın.
-5. Etherscan'de **"Verify and Publish"**: derleyici sürümü (0.8.20),
-   optimizer ayarı (Remix'teki ile birebir aynı) ve kaynak kodu yapıştırarak
-   doğrulayın.
+5. Etherscan'de **"Verify and Publish"**: derleyici sürümü (`0.8.34`),
+   optimizer ayarı (Remix'teki ile birebir aynı, kapalı) ve kaynak kodu
+   yapıştırarak doğrulayın.
 
 ### Deploy Bilgileri
 | Alan | Değer |

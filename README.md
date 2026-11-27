@@ -5,6 +5,18 @@ Bu depo, Quantum Team Blokzincir Takımı yeni üye oryantasyon iş paketinin
 teorik araştırma dokümanları, manuel görev kanıt şablonları, Solidity
 akıllı sözleşmeleri, otomatik testler ve iki modüllü bir web uygulaması.
 
+## Canlı Dağıtım Bilgileri (Sepolia Testnet)
+
+Aşağıdaki tüm işlemler gerçek Sepolia ağında, gerçek MetaMask imzalarıyla
+yapılmış ve bağımsız olarak (Etherscan + doğrudan RPC `eth_call` ile)
+doğrulanmıştır. Ayrıntılı kanıtlar için [`docs/Uygulama-Kayitlari-ve-Kanitlar.md`](docs/Uygulama-Kayitlari-ve-Kanitlar.md)'a bakınız.
+
+| Sözleşme | Adres | Durum |
+|---|---|---|
+| Takımın resmi `QuantumKayit`'i | [`0x81Dd700C459BF2806A1B5F2a349c89f0106A9036`](https://sepolia.etherscan.io/address/0x81Dd700C459BF2806A1B5F2a349c89f0106A9036) | Kayıt yapıldı (`"emresert"`, sıra #5) |
+| Kendi `QuantumKayit` kopyam | [`0x4914bBA9A4119d2a98172a7bbC4e500Ab9706eB0`](https://sepolia.etherscan.io/address/0x4914bBA9A4119d2a98172A7Bbc4e500Ab9706eB0#code) | Deploy edildi, **Verify edildi**, kayıt yapıldı |
+| `EtkinlikKayit_v3` (final sürüm) | [`0xa7Fc1B127dB1960fbFE32b8aD48ac623F9A9392E`](https://sepolia.etherscan.io/address/0xa7Fc1B127dB1960fbFE32b8aD48ac623F9A9392E#code) | Deploy edildi, **Verify edildi (Exact Match)**, dApp üzerinden kayıt + giriş onayı uçtan uca test edildi |
+
 ## Amaç ve Öğrenilen Konular
 
 - Blokzincir, konsensüs, kriptografi (hash/şifreleme/imza) ve cüzdan
@@ -100,10 +112,11 @@ npm run dev      # geliştirme sunucusu
 npm run build    # production build (dist/ klasörüne)
 ```
 
-Deploy ettiğiniz `EtkinlikKayit_v3` sözleşmesinin adresini,
-[`web/src/config/contractConfig.js`](web/src/config/contractConfig.js)
-dosyasındaki `DEFAULT_CONFIG.address` alanından **veya** doğrudan
-uygulamanın "⚙️ Ayarlar" kutusundan güncelleyin.
+`web/src/config/contractConfig.js` dosyasındaki `DEFAULT_CONFIG.address`,
+yukarıdaki "Canlı Dağıtım Bilgileri" tablosundaki `EtkinlikKayit_v3`
+adresiyle önceden yapılandırılmıştır. Kapasite dolup yeni bir kopya deploy
+ederseniz, bu alanı **veya** doğrudan uygulamanın "⚙️ Ayarlar" kutusunu
+güncelleyebilirsiniz — kod değişikliği gerekmez.
 
 ## İP 19 Madde 5 — Remix ve Etherscan Aynı Ağdaki Sözleşmelere Nasıl İşlem Gönderebiliyor?
 
