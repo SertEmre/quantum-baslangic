@@ -13,7 +13,7 @@ doğrulanmıştır. Ayrıntılı kanıtlar için [`docs/Uygulama-Kayitlari-ve-Ka
 
 | Sözleşme | Adres | Durum |
 |---|---|---|
-| Takımın resmi `QuantumKayit`'i | [`0x81Dd700C459BF2806A1B5F2a349c89f0106A9036`](https://sepolia.etherscan.io/address/0x81Dd700C459BF2806A1B5F2a349c89f0106A9036) | Kayıt yapıldı (`"emresert"`, sıra #5) |
+| Takımın resmi `QuantumKayit`'i | [`0x81Dd700C459BF2806A1B5F2a349c89f0106A9036`](https://sepolia.etherscan.io/address/0x81Dd700C459BF2806A1B5F2a349c89f0106A9036) | Kayıt yapıldı (`"emresert"`) |
 | Kendi `QuantumKayit` kopyam | [`0x4914bBA9A4119d2a98172a7bbC4e500Ab9706eB0`](https://sepolia.etherscan.io/address/0x4914bBA9A4119d2a98172A7Bbc4e500Ab9706eB0#code) | Deploy edildi, **Verify edildi**, kayıt yapıldı |
 | `EtkinlikKayit_v3` (final sürüm) | [`0xa7Fc1B127dB1960fbFE32b8aD48ac623F9A9392E`](https://sepolia.etherscan.io/address/0xa7Fc1B127dB1960fbFE32b8aD48ac623F9A9392E#code) | Deploy edildi, **Verify edildi (Exact Match)**, dApp üzerinden kayıt + giriş onayı uçtan uca test edildi |
 
